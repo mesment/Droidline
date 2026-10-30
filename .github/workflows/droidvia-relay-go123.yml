@@ -1,0 +1,35 @@
+name: Droidvia Relay (Go 1.23.2)
+
+on:
+  push:
+    branches: [feat/droidvia-relay]
+    paths:
+      - 'droidvia-relay/**'
+      - '.github/workflows/droidvia-relay-go123.yml'
+  pull_request:
+    paths:
+      - 'droidvia-relay/**'
+      - '.github/workflows/droidvia-relay-go123.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test-go123:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: droidvia-relay
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.2'
+          cache-dependency-path: droidvia-relay/go.sum
+      - name: Verify exact compiler
+        run: |
+          test "$(go version | awk '{print $3}')" = 'go1.23.2'
+      - run: go mod download
+      - run: GOTOOLCHAIN=local go test -race ./...
+      - run: GOTOOLCHAIN=local go vet ./...
+      - run: GOTOOLCHAIN=local go build -o /tmp/droidvia-relay ./cmd/droidvia-relay
