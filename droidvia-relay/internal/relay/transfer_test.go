@@ -66,6 +66,7 @@ func mustConnectTransfer(t *testing.T, base, me, other, id string) *websocket.Co
 		}
 		t.Fatalf("connect %s: status=%d err=%v", me, status, err)
 	}
+	c.SetReadLimit(MaxTransferFrame)
 	t.Cleanup(func() { _ = c.CloseNow() })
 	return c
 }
