@@ -66,7 +66,7 @@ func mustConnectTransfer(t *testing.T, base, me, other, id string) *websocket.Co
 		}
 		t.Fatalf("connect %s: status=%d err=%v", me, status, err)
 	}
-	t.Cleanup(c.CloseNow)
+	t.Cleanup(func() { _ = c.CloseNow() })
 	return c
 }
 
