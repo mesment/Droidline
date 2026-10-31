@@ -10,6 +10,7 @@ import (
  "net"
  "net/http"
  "os"
+ "regexp"
  "strings"
  "time"
 
@@ -29,7 +30,39 @@ func main() {
  token:=os.Getenv("DROIDVIA_DEV_RELAY_TOKEN")
  if *ticketFor!="" {
   if len(token)<32 {fmt.Fprintln(os.Stderr,"DROIDVIA_DEV_RELAY_TOKEN must have at least 32 characters");os.Exit(2)}
-  if strings.ContainsAny(*ticketFor," /?&=\\t\\n") {fmt.Fprintln(os.Stderr,"invalid peer ID");os.Exit(2)}
+  if !regexp.MustCompile(`^[a-zA-Z0-9_-]{1,128}// Command droidvia-relay is an explicitly local-only, development relay.
+// It is NOT ready for Internet deployment: R03 must add real identity
+// verification, route grants and DBP end-to-end session authentication.
+package main
+
+import (
+ "flag"
+ "fmt"
+ "log/slog"
+ "net"
+ "net/http"
+ "os"
+ "regexp"
+ "strings"
+ "time"
+
+ "github.com/mesment/Droidline/droidvia-relay/internal/relay"
+)
+
+func main() {
+ listen:=flag.String("listen","127.0.0.1:8767","loopback listening address (development only)")
+ pairs:=flag.String("pairs","","comma-separated peer pairs: phone:mac1,phone:mac2")
+ ticketFor:=flag.String("ticket-for","","print a per-device /v1/transfer development ticket and exit")
+ flag.Parse()
+ host,_,err:=net.SplitHostPort(*listen)
+ if err!=nil||!(host=="127.0.0.1"||host=="::1"||host=="localhost") {
+  fmt.Fprintln(os.Stderr,"development relay may only bind loopback")
+  os.Exit(2)
+ }
+ token:=os.Getenv("DROIDVIA_DEV_RELAY_TOKEN")
+ if *ticketFor!="" {
+  if len(token)<32 {fmt.Fprintln(os.Stderr,"DROIDVIA_DEV_RELAY_TOKEN must have at least 32 characters");os.Exit(2)}
+  ).MatchString(*ticketFor) {fmt.Fprintln(os.Stderr,"invalid peer ID");os.Exit(2)}
   fmt.Println(relay.TransferDeviceTicket(token,*ticketFor))
   return
  }
