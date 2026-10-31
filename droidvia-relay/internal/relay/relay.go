@@ -56,6 +56,7 @@ type Relay struct {
 	mu     sync.Mutex
 	peers  map[string]*peer
 	allow  map[string]map[string]bool
+	transfers map[string]*transferSession
 }
 
 type peer struct {
@@ -101,6 +102,7 @@ func NewDevelopment(cfg Config, log *slog.Logger) (*Relay, error) {
 		log:    log,
 		peers:  make(map[string]*peer),
 		allow:  make(map[string]map[string]bool),
+		transfers: make(map[string]*transferSession),
 	}
 	for _, pair := range cfg.Pairs {
 		if !validPeerID.MatchString(pair.A) || !validPeerID.MatchString(pair.B) || pair.A == pair.B {
@@ -125,6 +127,7 @@ func (r *Relay) Handler() http.Handler {
 		_, _ = w.Write([]byte("ok\n"))
 	})
 	mux.HandleFunc("GET /v1/connect", r.connect)
+	mux.HandleFunc("GET /v1/transfer", r.transfer)
 	return mux
 }
 
